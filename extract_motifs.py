@@ -67,6 +67,25 @@ def generate_bg(seqs, central_res, length):
     return bg
 
 
+def parse_fasta(fh):
+    '''
+    Parse the input fasta file handle to extract the sequences.
+
+    Args:
+        fh (file)
+
+    '''
+    #seqs = []
+    seq = ''
+    for line in fh:
+        if line.startswith('>') and seq:
+            #seqs.append(seq)
+            yield seq
+            seq = ''
+        seq += line.rstrip('\n')
+    #return seqs
+
+
 def extract_seqs(ifile, central_res, length, is_bg=False, write=True):
     '''
     Process the given input file to return the aligned sequences.
@@ -99,12 +118,10 @@ def extract_seqs(ifile, central_res, length, is_bg=False, write=True):
     with open(ifile, 'r') as fh:
         if form == Format.FASTA:
             if is_bg:
-                seqs = generate_bg(
-                    [s.rstrip() for s in fh if not s.startswith('>')],
-                    central_res, length)
+                seqs = generate_bg(parse_fasta(fh), central_res, length)
             else:
-                seqs = [align_sequence(s.rstrip(), central_res, length)
-                        for s in fh if not s.startswith('>')]
+                seqs = [align_sequence(s, central_res, length)
+                        for s in parse_fasta(fh)]
         elif form == Format.UNALIGNED:
             seqs = [align_sequence(s.rstrip(), central_res, length)
                     for s in fh]
