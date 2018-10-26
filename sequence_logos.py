@@ -11,7 +11,7 @@ import weblogolib as wl
 LOGO_DIR = 'logos'
 
 
-def generate_logo(seqfile):
+def generate_logo(seqfile, title):
     '''
     Generate the sequence logo from the specified sequences.
 
@@ -20,18 +20,22 @@ def generate_logo(seqfile):
 
     '''
     with open(seqfile, 'r') as fh:
+        seqlen = len(fh.readline().rstrip('\n'))
+        fh.seek(0)
         seqs = wl.read_seq_data(fh)
 
     data = wl.LogoData.from_seqs(seqs)
 
     options = wl.LogoOptions()
-    options.title = 'Title 1'
+    options.title = title
+
+    options.first_index = -1 * int(seqlen / 2)
 
     form = wl.LogoFormat(data, options)
 
     eps = wl.eps_formatter(data, form)
 
-    with open(seqfile + '.eps', 'wb') as fh:
+    with open(seqfile[:-4] + '.eps', 'wb') as fh:
         fh.write(eps)
 
 
@@ -52,14 +56,11 @@ def generate_logos(motifs, seqs):
         regex = re.compile(motif)
         matches = [s for s in seqs if regex.match(s)]
 
-        if len(matches) != row.loc['num_fg_matches']:
-            print('WARNING: fewer matches found than expected')
-
-        match_file = os.path.join(LOGO_DIR, 'motif_' + motif + '.txt')
+        match_file = os.path.join(LOGO_DIR, 'motif_' + motif + '_motif.txt')
         with open(match_file, 'w') as fh:
             fh.write('\n'.join(matches))
 
-        generate_logo(match_file)
+        generate_logo(match_file, motif)
 
 
 def parse_args():
