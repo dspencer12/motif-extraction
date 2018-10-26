@@ -4,6 +4,7 @@
 *.fasta*
 *.txt
 logos/
+.DS_Store
 
 # PYTHON STANDARD IGNORES
 # Byte-compiled / optimized / DLL files
