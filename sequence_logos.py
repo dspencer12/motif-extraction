@@ -28,6 +28,7 @@ def generate_logo(seqfile, title):
 
     options = wl.LogoOptions()
     options.title = title
+    options.fineprint = ''
 
     options.first_index = -1 * int(seqlen / 2)
 
