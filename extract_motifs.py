@@ -192,10 +192,18 @@ def parse_args():
         help='The desired length of the peptide sequences'
     )
     parser.add_argument(
-        '-o',
-        '--output',
+        '-m',
+        '--motif-output',
+        dest='motif_output',
         default='output.csv',
         help='The file to which motif results are written'
+    )
+    parser.add_argument(
+        '-o',
+        '--logo-output',
+        dest='logo_output',
+        default='logos',
+        help='The directory to which to write logo information'
     )
     parser.add_argument(
         '-p',
@@ -211,7 +219,14 @@ def parse_args():
         default=0,
         help='Enable verbose logging'
     )
-    return parser.parse_args()
+
+    args = parser.parse_args()
+
+    # Validate arguments
+    if args.min_occs < 1:
+        raise RuntimeError('min_occs must be set to a value greater than 1')
+
+    return args
 
 
 if __name__ == '__main__':
@@ -223,7 +238,7 @@ if __name__ == '__main__':
     if motifs is None:
         sys.exit('No motifs found')
 
-    motifs.to_csv(args.output)
+    motifs.to_csv(args.motif_output)
 
     if args.plot:
-        sequence_logos.generate_logos(motifs, fg_seqs)
+        sequence_logos.generate_logos(motifs, fg_seqs, args.logo_output)
