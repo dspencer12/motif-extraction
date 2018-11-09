@@ -36,7 +36,7 @@ def align_sequence(seq, central_res, length, extra_char='X'):
                 min_dist, split_index = dist, index
 
     if split_index is None:
-        print(seq)
+        return ''
 
     left, right = seq[:split_index], seq[split_index+1:]
 

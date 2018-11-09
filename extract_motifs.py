@@ -64,7 +64,7 @@ def generate_bg(seqs, central_res, length):
                       for idx in indices]
         bg.extend([align_sequence(s, central_res, length) for s in inner_seqs])
 
-    return bg
+    return [s for s in bg if s]
 
 
 def parse_fasta(fh):
@@ -75,15 +75,13 @@ def parse_fasta(fh):
         fh (file)
 
     '''
-    #seqs = []
     seq = ''
     for line in fh:
         if line.startswith('>') and seq:
-            #seqs.append(seq)
             yield seq
             seq = ''
-        seq += line.rstrip('\n')
-    #return seqs
+        if not line.startswith('>'):
+            seq += line.rstrip('\n')
 
 
 def extract_seqs(ifile, central_res, length, is_bg=False, write=True):
@@ -128,7 +126,7 @@ def extract_seqs(ifile, central_res, length, is_bg=False, write=True):
         else:
             seqs = [s.rstrip() for s in fh]
 
-    seqs = list(set(seqs))
+    seqs = [s for s in list(set(seqs)) if s]
 
     if write and needs_alignment:
         with open(ifile + '.aligned', 'w') as fh:
