@@ -3,14 +3,13 @@
 Extract statistically significant motifs from the input peptide sequences.
 
 '''
-
-import argparse
 import enum
 import sys
 
+import click
+
 from align import align_sequence
 from pymotifx import motifx
-import sequence_logos
 
 
 class Format(enum.Enum):
@@ -39,7 +38,6 @@ def _detect_format(ifile):
         fh.seek(0)
 
         # Non-FASTA files
-        # TODO: optimise detection of prealigned input
         length = len(first)
         res = first[int(length / 2)]
         for line in fh:
@@ -148,97 +146,54 @@ def extract(fg_file, bg_file, central_res, length, min_occs, max_p, verbose=0):
                     verbose=verbose)
 
     return (motifs, fg_seqs)
-
-
-def parse_args():
+    
+    
+@click.command()
+@click.argument('foreground')
+@click.argument('background')
+@click.argument('central-residue')
+@click.option('-m', '--min-occurences', 'min_occs', type=int, default=1,
+              help='The minimum number of times a pattern/motif must appear '
+                   'in the foreground data.', show_default=True)
+@click.option('-p', '--p-cutoff', type=float, default=1e-6,
+               help='The maximum allowed p-value.', show_default=True)
+@click.option('-l', '--length', type=int,
+               help='The target length of the peptide sequences.')
+@click.option('-m', '--motif-output', default='output.csv',
+               help='The file to which motif results are written.')
+@click.option('-o', '--logo-output', default='logos',
+              help='The directory to which to write logo information')
+@click.option('--plot/--no-plot', default=False,
+              help='If enabled, plot a sequence logo for each motif.')
+@click.option('-v', '--verbose', count=True, help='Enable verbose logging.')
+def main(foreground, background, central_residue, min_occs,
+         p_cutoff, length, motif_output, logo_output, plot, verbose):
     '''
-    Parse the command line arguments.
+    Extract statistically significant motifs from the foreground sequences.
 
-    Returns:
-        argparse.Namespace
+    Args:
+        foreground (str): The foreground sequence file, in FASTA,
+                          prealigned or unaligned format.
+
+        background (str): The background sequence file, in FASTA,
+                          prealigned or unaligned format.
+
+        central-residue (str): The residue at the centre of the peptide
+                               sequences.
 
     '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        'fg_file',
-        help=('The foreground sequence file. Accepts FASTA, prealigned or '
-              'unaligned formats.')
-    )
-    parser.add_argument(
-        'bg_file',
-        help=('The background sequence file. Accepts FASTA, prealigned or '
-              'unaligned formats.')
-    )
-    parser.add_argument(
-        'central_res',
-        help='The central residue of the peptide sequences.'
-    )
-    parser.add_argument(
-        'min_occs',
-        type=int,
-        help=('The minimum number of times a motif must occur in the '
-              'foreground.')
-    )
-    parser.add_argument(
-        'p_cutoff',
-        type=float,
-        help='The maximum allowed p-value.'
-    )
-    parser.add_argument(
-        '-l',
-        '--length',
-        default=None,
-        type=int,
-        help='The desired length of the peptide sequences'
-    )
-    parser.add_argument(
-        '-m',
-        '--motif-output',
-        dest='motif_output',
-        default='output.csv',
-        help='The file to which motif results are written'
-    )
-    parser.add_argument(
-        '-o',
-        '--logo-output',
-        dest='logo_output',
-        default='logos',
-        help='The directory to which to write logo information'
-    )
-    parser.add_argument(
-        '-p',
-        '--plot',
-        action='store_true',
-        default=False,
-        help='Set to true to plot a sequence logo for each motif'
-    )
-    parser.add_argument(
-        '-v',
-        '--verbose',
-        action='count',
-        default=0,
-        help='Enable verbose logging'
-    )
-
-    args = parser.parse_args()
-
-    # Validate arguments
-    if args.min_occs < 1:
-        raise RuntimeError('min_occs must be set to a value greater than 1')
-
-    return args
+    motifs, fg_seqs = extract(foreground, background, central_residue, length,
+                              min_occs, p_cutoff, verbose=verbose)
+    
+    if motifs is None:
+        sys.exit('No motifs found')
+        
+    motifs.to_csv(motif_output)
+    
+    if plot:
+        import sequence_logos
+        sequence_logos.generate_logos(motifs, fg_seqs, logo_output)
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    motifs, fg_seqs = extract(args.fg_file, args.bg_file, args.central_res,
-                              args.length, args.min_occs, args.p_cutoff,
-                              verbose=args.verbose)
-
-    if motifs is None:
-        sys.exit('No motifs found')
-
-    motifs.to_csv(args.motif_output)
-
-    if args.plot:
-        sequence_logos.generate_logos(motifs, fg_seqs, args.logo_output)
+    main()

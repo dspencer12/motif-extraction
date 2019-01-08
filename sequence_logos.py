@@ -1,9 +1,12 @@
 #! /usr/bin/env python3
+'''
+A script to generate sequence logos from motif data.
 
-import argparse
+'''
 import os
 import re
 
+import click
 import pandas as pd
 import weblogolib as wl
 
@@ -62,37 +65,19 @@ def generate_logos(motifs, seqs, output_dir):
             fh.write('\n'.join(matches))
 
         generate_logo(match_file, motif)
+    
 
-
-def parse_args():
-    '''
-    Parse the command line arguments.
-
-    Returns:
-        argparse.Namespace
-
-    '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        'motif_csv',
-        help='The CSV file containing motif information'
-    )
-    parser.add_argument(
-        'seq_file',
-        help='The path to the file containing the foreground sequences'
-    )
-    parser.add_argument(
-        '-o',
-        '--output-dir',
-        dest='output_dir',
-        default='logos',
-        help='The destination directory for saving logos'
-    )
-    return parser.parse_args()
+@click.command()
+@click.argument('motif-file')
+@click.argument('sequence-file')
+@click.option('--output-dir', '-o',
+              help='The destination directory for saving logos',
+              default='logos')
+def main(motif_file, sequence_file, output_dir):
+    with open(sequence_file) as fh:
+        seqs = [s.rstrip() for s in fh]
+    generate_logos(pd.read_csv(motif_file), seqs, output_dir)
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    with open(args.seq_file, 'r') as fh:
-        seqs = [s.rstrip() for s in fh]
-    generate_logos(pd.read_csv(args.motif_csv), seqs, args.output_dir)
+    main()
