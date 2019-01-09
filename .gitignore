@@ -3,6 +3,7 @@
 *.csv
 *.fasta*
 *.txt
+*.xlsx
 logos/
 .DS_Store
 
