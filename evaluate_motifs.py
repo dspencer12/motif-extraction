@@ -20,7 +20,7 @@ def get_matches(motif, seqs):
     Args:
         motif (str): The motif pattern to apply.
         seqs (list): The list of sequences.
-        
+
     Returns:
         list: The sequences matching the input motif.
 
@@ -28,14 +28,14 @@ def get_matches(motif, seqs):
     regex = re.compile(motif)
     return [s for s in seqs if regex.match(s)]
 
-        
+
 def evaluate_motifs(motif_file, pos_seq_file, neg_seq_file, central_res,
                     seq_len, output_file):
     '''
     Evaluate the given motifs by matching against the positive and negative
     sequence files (prealigned or fasta format) and computing various
     evaluation metrics.
-    
+
     Args:
         motif_file (str): The path to the file containing motif patterns,
                           in CSV format with a column named 'motif'.
@@ -49,18 +49,18 @@ def evaluate_motifs(motif_file, pos_seq_file, neg_seq_file, central_res,
         seq_len (int): The length/target length of the sequences.
         output_file (str): The path to the file to which to write the metric
                            results.
-    
+
     '''
     with open(motif_file) as fh:
         reader = csv.DictReader(fh)
         motifs = [l['motif'] for l in reader]
-        
+
     def _extract_seqs(ifile):
         return extract_seqs(ifile, central_res, seq_len, write=False)
-    
+
     pos_seqs = _extract_seqs(pos_seq_file)
     neg_seqs = _extract_seqs(neg_seq_file)
-    
+
     motif_scores = []
     for motif in motifs:
         pos_matches = get_matches(motif, pos_seqs)
@@ -69,19 +69,21 @@ def evaluate_motifs(motif_file, pos_seq_file, neg_seq_file, central_res,
         fp = len(neg_matches)
         tn = len(neg_seqs) - fp
         fn = len(pos_seqs) - tp
-        
+
         acc = (tp + tn) / (tp + tn + fp + fn)
         sen = tp / (tp + fn)
         spec = tn / (fp + tn)
-        
-        mcc = ((tp * tn) - (fp * fn)) / (((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) ** 0.5)
+
+        mcc = ((tp * tn) - (fp * fn)) /\
+              (((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) ** 0.5)
         motif_scores.append((motif, acc, sen, spec, mcc))
-        
+
     with open(output_file, 'w', newline='') as fh:
         writer = csv.writer(fh)
-        writer.writerow(['motif', 'accuracy', 'sensitivity', 'specificity', 'mcc'])
+        writer.writerow(['motif', 'accuracy', 'sensitivity', 'specificity',
+                         'mcc'])
         writer.writerows(motif_scores)
-    
+
 
 @click.command()
 @click.argument('motif-file')

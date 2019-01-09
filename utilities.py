@@ -109,8 +109,8 @@ def extract_seqs(ifile, central_res, length, is_bg=False, write=True):
             fh.write('\n'.join(seqs))
 
     return seqs
-    
-    
+
+
 def generate_bg(seqs, central_res, length):
     '''
     Generate the background sequences given full input sequences.
@@ -126,8 +126,8 @@ def generate_bg(seqs, central_res, length):
         bg.extend([align_sequence(s, central_res, length) for s in inner_seqs])
 
     return [s for s in bg if s]
-    
-    
+
+
 def align_sequence(seq, central_res, length, extra_char='X'):
     '''
     Align the given sequence on the central residue.

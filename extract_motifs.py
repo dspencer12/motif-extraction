@@ -24,8 +24,8 @@ def extract(fg_file, bg_file, central_res, length, min_occs, max_p, verbose=0):
                     verbose=verbose)
 
     return (motifs, fg_seqs)
-    
-    
+
+
 @click.command()
 @click.argument('foreground')
 @click.argument('background')
@@ -34,11 +34,11 @@ def extract(fg_file, bg_file, central_res, length, min_occs, max_p, verbose=0):
               help='The minimum number of times a pattern/motif must appear '
                    'in the foreground data.', show_default=True)
 @click.option('-p', '--p-cutoff', type=float, default=1e-6,
-               help='The maximum allowed p-value.', show_default=True)
+              help='The maximum allowed p-value.', show_default=True)
 @click.option('-l', '--length', type=int,
-               help='The target length of the peptide sequences.')
+              help='The target length of the peptide sequences.')
 @click.option('-m', '--motif-output', default='output.csv',
-               help='The file to which motif results are written.')
+              help='The file to which motif results are written.')
 @click.option('-o', '--logo-output', default='logos',
               help='The directory to which to write logo information')
 @click.option('--plot/--no-plot', default=False,
@@ -62,12 +62,12 @@ def main(foreground, background, central_residue, min_occs,
     '''
     motifs, fg_seqs = extract(foreground, background, central_residue, length,
                               min_occs, p_cutoff, verbose=verbose)
-    
+
     if motifs is None:
         sys.exit('No motifs found')
-        
+
     motifs.to_csv(motif_output)
-    
+
     if plot:
         import sequence_logos
         sequence_logos.generate_logos(motifs, fg_seqs, logo_output)
